@@ -34,8 +34,9 @@ like so:
          \stoppeg}
 
       % Configuring a custom PEG style with emphasized non-terminals
+      \def\nonterminal#1{\text{\em #1}}
       \definepeg[mypeg]
-      \setuppeg[mypeg][definitionntcommand=\nonterminal,identifier=\nonterminal]
+      \setuppeg[mypeg][definitionntcommand=\nonterminal,identifiercommand=\nonterminal]
     \stoptext
 
 ## Extensions

@@ -38,7 +38,8 @@ like so:
       \setuppeg[mypeg][definitionntcommand=\nonterminal,identifier=\nonterminal]
     \stoptext
 
-## Extensions Several extensions to the standard PEG grammar are included for common requirements. A description
+## Extensions
+Several extensions to the standard PEG grammar are included for common requirements. A description
 terminal has been added, which is in the format `<Descriptive text>` (that's with the angle brackets literally
 included). This is by default rendered with emphasized (italicized) text surrounded by angle brackets. It is useful for
 non-formal descriptions of a string match. An extra escape has been included for literals and ranges which describes a

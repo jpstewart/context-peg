@@ -1,0 +1,204 @@
+%C PEG Typesetting Module for ConTeXt
+%C Copyright (C) 2014 John Stewart
+%C
+%C This program is free software: you can redistribute it and/or modify
+%C it under the terms of the GNU General Public License as published by
+%C the Free Software Foundation, either version 3 of the License, or
+%C (at your option) any later version.
+%C
+%C This program is distributed in the hope that it will be useful,
+%C but WITHOUT ANY WARRANTY; without even the implied warranty of
+%C MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%C
+%C GNU General Public License for more details.
+%C You should have received a copy of the GNU General Public License
+%C along with this program.  If not, see <http://www.gnu.org/licenses/>.
+%C
+%D \module
+%D    [       file=t-peg,
+%D         version=1.0.0,
+%D           title={PEG Grammars},
+%D          author={John Stewart},
+%D            date=\currentdate,
+%D       copyright={2014 John Stewart},
+%D         license={GNU GPL 3}]
+
+%M \usemodule[peg]
+
+%D The PEG module produces typeset Parsing Expression Grammars (PEGs) in a \CONTEXT\ document.  The module supports all
+%D of the standard PEG syntax, as well as a couple of extensions to better describe certain grammars. A PEG grammar can
+%D be described within a \type{peg} block, started with \type{\startpeg} and closed with \type{\stoppeg}. Within the
+%D block the PEG can be written in the plain text syntax described in the original PEG paper, with extensions. The
+%D output will be typeset such that the productions within the same block are aligned around the left arrow operator.
+%D
+%D The following example uses the PEG module to typeset PEG grammar itself:
+%D \startbuffer
+%D \placepeg[][]{Hierarchical syntax}
+%D {\startpeg
+%D   # Hierarchical syntax
+%D   Grammar <- Spacing Definition+ EndOfFile
+%D   Definition <- Identifier LEFTARROW Expression
+%D
+%D   Expression <- Sequence (SLASH Sequence)*
+%D   Sequence <- Prefix*
+%D   Prefix <- (AND / NOT)? Suffix
+%D   Suffix <- Primary (QUESTION / STAR / PLUS)?
+%D   Primary <- Identifier !LEFTARROW /\n
+%D              OPEN Expression CLOSE /\n
+%D              Literal / Class / DOT
+%D \stoppeg}
+%D \placepeg[][]{Lexical syntax}
+%D {\startpeg
+%D   # Lexical syntax
+%D   Identifier <- IdentStart IdentCont* Spacing
+%D   IdentStart <- [a-zA-Z_]
+%D   IdentCont <- IdentStart / [0-9]
+%D
+%D   Literal <- ['] (!['] Char)* ['] Spacing /\n
+%D              ["] (!["] Char)* ["] Spacing
+%D   Class <- '[' (!']' Range)* ']' Spacing
+%D   Range <- Char '-' Char / Char
+%D   Char <- '\\' [nrt'"\[\]\\] /\n
+%D           '\\' [0-2][0-7][0-7] /\n
+%D           '\\' [0-7][0-7]? /\n
+%D           !'\\' .
+%D
+%D   LEFTARROW <- '<-' Spacing
+%D   SLASH <- '/' Spacing
+%D   AND <- '&' Spacing
+%D   NOT <- '!' Spacing
+%D   QUESTION <- '?' Spacing
+%D   STAR <- '*' Spacing
+%D   PLUS <- '+' Spacing
+%D   OPEN <- '(' Spacing
+%D   CLOSE <- ')' Spacing
+%D   DOT <- '.' Spacing
+%D
+%D   Spacing <- (Space / Comment)*
+%D   Comment <- '#' (!EndOfLine .)* EndOfLine
+%D   Space <- ' ' / '\t' / EndOfLine
+%D   EndOfLine <- '\r\n' / '\n' / '\r'
+%D   EndOfFile <- !.
+%D \stoppeg}
+%D \placefloats
+%D \stopbuffer
+%D \typebuffer\getbuffer
+%D
+%D \startsubsubject[title={PEG Extensions}]
+%D Several extensions are available for use with the PEG module. First, the identifiers for non-terminals have been
+%D expanded to allow Unicode letter characters, as well as the en-dash (\type{-}) character in the non-initial
+%D position.
+%D
+%D A new non-terminal has been made available which reflects the common practice of making non-formal descriptions of
+%D the strings which match to certain non-terminals. This is the \quotation{description} non-terminal, which can be
+%D indicated by wrapping the descriptive text with angle brackets.
+%D \startbuffer
+%D \startpeg
+%D   Whitespace <- <Any Unicode whitespace character of class WS>
+%D \stoppeg
+%D \stopbuffer
+%D \typebuffer\getbuffer
+%D
+%D An additional escape sequence is made available for characters. In addition to standard escaped characters, (such as
+%D \text{\textbackslash{}n}), this module introduces the descriptive Unicode escape. The form of this escape is
+%D \text{\textbackslash{}x(<codepoint>:<description>)}. The \text{codepoint} value should be up to four characters with
+%D the character's code point, and the \text{description} is an informal description of the character (such as the
+%D Unicode character %D name. When typeset, these characters are rendered with a \text{U} followed by the superscript
+%D code point, and the subscript description. This is a pretty-print alternative to the standard PEG code point escape
+%D format of \text{\textbackslash{}NNN} and \text{\textbackslash{}NN}.
+%D \startbuffer
+%D \startpeg
+%D   Whitespace <- ' ' / '\x{000A:LINE FEED}'
+%D \stoppeg
+%D \stopbuffer
+%D \typebuffer\getbuffer
+%D
+%D A special line feed symbol can also be included in your grammar. This symbol is not typeset as part of the grammar
+%D itself. It will add a hard line break to your grammar, allowing the definition to continue on the next line aligned
+%D to the start of the definition from the previous line. The symbol for a line feed is the literal string
+%D \text{\textbackslash{}n}.
+%D \startbuffer
+%D \startpeg
+%D   MultilineDefinition <- "return" / \n "function"
+%D \stoppeg
+%D \stopbuffer
+%D \typebuffer\getbuffer
+%D \stopsubsubject
+
+\writestatus{loading}{Loading the PEG Grammar module}
+\registerctxluafile{t-peg.lua}{1.0.0}
+\unprotect
+\definesystemvariable{peg}
+
+%D Define the namespace and environment for grammars.
+\definenamespace[peg][
+  type=module,
+  name=PEG,
+  setup=list]
+\installsimplecommandhandler \????peg {peg} \????peg
+\installparameterhandler \????peg {peg}
+\installdefinehandler \????peg {peg} \????peg
+\definefloat[peg][pegs]
+
+% Configure heading and caption text.
+\setupheadtext[\s!en][peg=Grammar]
+\setupheadtext[\s!en][pegs=Grammars]
+\setuplabeltext[\s!en][peg=Grammar ]
+
+%D Define some commands to use in the default setup for rendering PEG constructs.
+\def\defaultpeggrammarstart{\startformula\startalign[n=3,right,center,left]}
+\def\defaultpeggrammarstop{\stopalign\stopformula}
+\def\defaultpegdefinitionnt#1{\pegparameter{identifiercommand}{#1}}
+\def\defaultpegdefinition#1#2{\NC #1 \NC \longleftarrow \NC #2 \NR }
+\def\defaultpegchoice#1#2{#1\;/\;#2}
+\def\defaultpegsequence#1#2{#1\;#2}
+\def\defaultpeggroup#1{(#1)}
+\def\defaultpegprefix#1{\text{#1}}
+\def\defaultpegsuffix#1{\unskip\text{#1}}
+\def\defaultpegliteral#1{\text{\quotation{\tt #1}}}
+\def\defaultpegclass#1{[#1]}
+\def\defaultpegsimplerange#1{\text{\tt #1}}
+\def\defaultpegrange#1#2{\pegparameter{simplerangecommand}{#1}-\pegparameter{simplerangecommand}{#2}}
+\def\defaultpegidentifier#1{\text{#1}}
+\def\defaultpegdescription#1{\langle\text{\em #1}\rangle }
+\def\defaultpegcomplexchar#1#2{\text{\em\rm U\high{#1}\low{#2}}}
+\def\defaultpegdot{\text{\tt .}}
+\def\defaultpeglinefeed{\NR\NC\NC\NC }
+
+%D Define the default setup for PEG typesetting.
+%D These environment parameters can be customized to change how grammars are typeset.
+\setuppeg[
+  grammarstartcommand=\defaultpeggrammarstart,
+  grammarstopcommand=\defaultpeggrammarstop,
+  definitionntcommand=\defaultpegidentifier,
+  definitioncommand=\defaultpegdefinition,
+  choicecommand=\defaultpegchoice,
+  sequencecommand=\defaultpegsequence,
+  groupcommand=\defaultpeggroup,
+  prefixcommand=\defaultpegprefix,
+  suffixcommand=\defaultpegsuffix,
+  literalcommand=\defaultpegliteral,
+  classcommand=\defaultpegclass,
+  simplerangecommand=\defaultpegsimplerange,
+  rangecommand=\defaultpegrange,
+  descriptioncommand=\defaultpegdescription,
+  identifiercommand=\defaultpegidentifier,
+  complexcharcommand=\defaultpegcomplexchar,
+  dotcommand=\defaultpegdot,
+  linefeedcommand=\defaultpeglinefeed
+]
+
+%D Define the buffer environment.
+\def\startpeg
+  {\dostartbuffer
+    [peg]
+    [startpeg]
+    [stoppeg]}
+\def\stoppeg{
+  \catcode`\#=12
+  \ctxlua{thirddata.peg(buffers.getcontent('peg'))}
+}
+
+\protect
+\writestatus{loading}{The PEG Grammar module was loaded successfully}
+\endinput

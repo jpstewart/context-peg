@@ -255,7 +255,9 @@ local grammar = lpeg.P{
 ------------------------------------------------------------------------------------------------------------------------
 -- Main entry-point for command
 ------------------------------------------------------------------------------------------------------------------------
-function thirddata.peg(s)
+thirddata = thirddata or { }
+thirddata.peg = thirddata.peg or { }
+function thirddata.peg.typeset(s)
    s = s .. "\n"
    output = grammar:match(s)
    if output == nil then

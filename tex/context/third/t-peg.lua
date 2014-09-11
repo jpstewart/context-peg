@@ -18,7 +18,7 @@ if not modules then
    modules = { }
 end
 modules['t-peg'] = {
-   version = 1.0.0,
+   version = "1.0.0",
    comment = "LuaTeX script for the t-peg ConTeXt module.",
    author = "John Stewart",
    copyright = "2014 John Stewart",
